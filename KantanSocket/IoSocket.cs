@@ -55,7 +55,7 @@ namespace KantanNetworking
         public IPEndPoint EndPoint { get; private set; }
         public Socket Handler { get; private set; }
 
-        public Encoding Encoding { get; set; }
+        public Encoding Encoding { get; set; } = Encoding.ASCII;
         public KantanBufferSize BufferSize { get; set; } = KantanBufferSize.Default;
 
         #endregion
@@ -131,7 +131,6 @@ namespace KantanNetworking
                 {
 
                     OnReceive?.Invoke(state, bytesRead);
-
                 }
 
                 Handler.BeginReceive(state.Buffer, 0, (int)state.BufferSize, 0, new AsyncCallback(ReceiveCallBack), state);
@@ -147,22 +146,39 @@ namespace KantanNetworking
         /// </summary>
         public void Connect()
         {
+            // Buffer Exception in Callback for Execution.
+            Exception bufferedException = null;
+
             var connectionEvent = new ManualResetEvent(false);
             connectionEvent.Reset();
 
             Handler.BeginConnect(EndPoint, (ar) =>
             {
-                Handler.EndConnect(ar);
+                try
+                {
+                    Handler.EndConnect(ar);
 
-                var state = new KantanState(this, BufferSize);
+                    var state = new KantanState(this, BufferSize);
 
-                OnConnection?.Invoke(this);
+                    OnConnection?.Invoke(this);
 
-                Handler.BeginReceive(state.Buffer, 0, (int)state.BufferSize, 0, new AsyncCallback(ReceiveCallBack), state);
-                connectionEvent.Set(); // Set event to unblock the connect function
+                    Handler.BeginReceive(state.Buffer, 0, (int)state.BufferSize, 0, new AsyncCallback(ReceiveCallBack), state);
+                }catch(Exception ex)
+                {
+                    bufferedException = ex;
+                }
+                finally
+                {
+                    // Set event to unblock the connect function
+                    connectionEvent.Set();
+                }
             }, Handler);
 
-            connectionEvent.WaitOne(); // Wait until connection has been made.
+            // Wait until connection has been made.
+            connectionEvent.WaitOne(); 
+
+            // Throw Exception Caught in CallBack.
+            if (bufferedException != null) throw bufferedException;
         }
 
         /// <summary>

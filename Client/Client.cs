@@ -24,11 +24,11 @@ namespace Client
             try
             {
 
-                var client = new IoSocket("127.0.0.1", 3000);
+                var client = new KantanSocket("127.0.0.1", 3000);
 
                 client.OnConnection += (socket) =>
                 {
-                    Console.WriteLine("Succesfully connected");
+                    Console.WriteLine("Connection Succesfull");
                 };
 
                 client.OnDisconnect += (socket) =>
@@ -36,21 +36,14 @@ namespace Client
                     Console.WriteLine("Connection Lost");
                 };
 
-                client.OnReceive += (state, bytesRead) =>
+                client.OnReceive += (message) =>
                 {
-                    Console.WriteLine($"{bytesRead} bytes recieved.");
-                };
-
-                client.OnSend += (ar, bytesSent) =>
-                {
-                    Console.WriteLine($"Sent {bytesSent} bytes");
+                    Console.WriteLine($"Received : {message}");
                 };
 
                 client.Connect();
 
-                System.Threading.Thread.Sleep(1000);
-
-                client.Send(Encoding.ASCII.GetBytes("test"));
+                client.Send("OwO hewo");
 
             }
             catch (Exception ex)

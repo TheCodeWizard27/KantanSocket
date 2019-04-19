@@ -13,6 +13,8 @@ namespace KantanNetworking
     {
 
         void Send(byte[] content);
+        void Connect();
+        Task ConnectAsync();
 
     }
 }

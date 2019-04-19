@@ -115,11 +115,11 @@ namespace KantanNetworking
                     var tmpSocket = Handler.EndAccept(ar);
                     var tmpState = new KantanState(new IoSocket(tmpSocket, (IPEndPoint) tmpSocket.RemoteEndPoint), BufferSize);
 
-                    tmpSocket.BeginReceive(tmpState.Buffer, 0, (int)tmpState.BufferSize, 0, new AsyncCallback(ReceiveCallBack), tmpState);
-
+                    OnConnection?.Invoke(tmpState.Socket);
                     ConnectedSockets.Add(tmpState.Socket);
 
-                    OnConnection?.Invoke(tmpState.Socket);
+                    tmpSocket.BeginReceive(tmpState.Buffer, 0, (int)tmpState.BufferSize, 0, new AsyncCallback(ReceiveCallBack), tmpState);
+
                 }, Handler);
 
                 // Wait for a connection to happen.

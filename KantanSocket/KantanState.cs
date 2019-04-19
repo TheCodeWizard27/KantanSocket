@@ -40,7 +40,7 @@ namespace KantanNetworking
 
         public byte[] Buffer { get; private set; }
 
-        public StringBuilder StringBuffer { get; private set; }
+        public StringBuilder StringBuffer { get; private set; } = new StringBuilder();
 
         public KantanBufferSize BufferSize { get; private set; }
 
