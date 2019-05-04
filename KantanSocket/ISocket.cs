@@ -14,7 +14,9 @@ namespace KantanNetworking
 
         void Send(byte[] content);
         void Connect();
+        void Disconnect();
         Task ConnectAsync();
+        Task DisconnectAsync();
 
     }
 }

@@ -146,6 +146,17 @@ namespace KantanNetworking
         {
             _isListening = false;
             _listeningEvent.Set();
+
+            Handler.Shutdown(SocketShutdown.Both);
+            Handler.Close();
+        }
+
+        public Task StopListeningAsync()
+        {
+            return Task.Run(() =>
+            {
+                StopListening();
+            });
         }
 
         /// <summary>

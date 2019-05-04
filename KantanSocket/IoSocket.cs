@@ -260,6 +260,20 @@ namespace KantanNetworking
             return await ConnectToAsync(IPAddress.Parse(ip), port, encoding, bufferSize);
         }
 
+        public void Disconnect()
+        {
+            Handler.Shutdown(SocketShutdown.Both);
+            Handler.Close();
+        }
+
+        public Task DisconnectAsync()
+        {
+            return Task.Run(() =>
+            {
+                Disconnect();
+            });
+        }
+
         #endregion
 
         #endregion

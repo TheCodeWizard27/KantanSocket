@@ -45,13 +45,19 @@ namespace Client
 
                 client.Send("OwO hewo");
 
+                Console.WriteLine("Press a key to disconnect");
+                Console.ReadKey();
+
+                client.Disconnect();
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
             }
 
+            Console.WriteLine("Disconnected Gracefully");
             Console.Read();
+
         }
 
     }

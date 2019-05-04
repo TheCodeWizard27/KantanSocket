@@ -63,6 +63,16 @@ namespace KantanNetworking
             await Handler.StartListeningAsync();
         }
 
+        public void Stop()
+        {
+            Handler.StopListening();
+        }
+
+        public async Task StopAsync()
+        {
+            await Handler.StopListeningAsync();
+        }
+
         public void Send(object message)
         {
             var tmpMsg = Encoding.GetBytes(JsonConvert.SerializeObject(message) + EndOfMessage);

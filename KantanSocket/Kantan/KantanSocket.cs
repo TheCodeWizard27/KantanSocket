@@ -69,6 +69,16 @@ namespace KantanNetworking
             await Handler.ConnectAsync();
         }
 
+        public void Disconnect()
+        {
+            Handler.Disconnect();
+        }
+
+        public async Task DisconnectAsync()
+        {
+            await Handler.DisconnectAsync();
+        }
+
         public void Send(object message)
         {
             Handler.Send(Encoding.GetBytes(JsonConvert.SerializeObject(message) + EndOfMessage));

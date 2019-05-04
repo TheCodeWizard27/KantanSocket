@@ -13,6 +13,7 @@ namespace KantanNetworking
         void StartListening();
         Task StartListeningAsync();
         void StopListening();
+        Task StopListeningAsync();
 
         void Send(ISocket socket, byte[] content);
         void Send(byte[] content);
