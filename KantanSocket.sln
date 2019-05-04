@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2019
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.202
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KantanNetworking", "KantanSocket\KantanNetworking.csproj", "{DE5541FE-4CA8-4683-8C45-7B373DCFC153}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{8C6A447F-0691-4D24-94DB-0E38D55957FF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Samples\Client\Client.csproj", "{8C6A447F-0691-4D24-94DB-0E38D55957FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{C9C0BB15-ECE4-4B35-8CBD-2AC8AA506097}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Samples\Server\Server.csproj", "{C9C0BB15-ECE4-4B35-8CBD-2AC8AA506097}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
