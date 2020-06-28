@@ -28,7 +28,7 @@ namespace Server
 
                         socket.OnReceive += (message) =>
                         {
-                            Console.WriteLine($"Received : {message} from : {socket.Handler.EndPoint}");
+                            Console.WriteLine($"Received : {message.GetData<string>()} from : {socket.Handler.EndPoint}");
                         };
 
                         socket.OnDisconnect += (socket1) =>
@@ -48,7 +48,18 @@ namespace Server
                     }
                 };
 
-                server.Start();
+                server.OnReceive += (message) =>
+                {
+                    Console.WriteLine("Got some Unknown Message");
+                };
+
+                server.StartAsync();
+
+                while (true)
+                {
+                    server.Send("To yall");
+                    Console.ReadLine();
+                }
 
             }
             catch (Exception ex)

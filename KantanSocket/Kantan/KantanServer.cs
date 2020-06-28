@@ -32,8 +32,10 @@ namespace KantanNetworking
         }
 
         public string EndOfMessage { get; set; } = "<EOF>";
+        public string EndOfConnection { get; set; } = "<EOFC>";
 
-        private Dictionary<ISocket, KantanSocket> SocketMap { get; set; } = new Dictionary<ISocket, KantanSocket>();
+        private Dictionary<ISocket, KantanSocket> _socketMap { get; set; } = new Dictionary<ISocket, KantanSocket>();
+        private List<ChannelSubscription> _subscriptions { get; set; } = new List<ChannelSubscription>();
 
         #endregion
 
@@ -42,7 +44,7 @@ namespace KantanNetworking
 
         public delegate void OnConnectionHandler(KantanSocket socket);
         public delegate void OnDisconnectHandler(KantanSocket socket);
-        public delegate void OnReceiveHandler(string message);
+        public delegate void OnReceiveHandler(NetworkMessage message);
 
         public event OnConnectionHandler OnConnection;
         public event OnDisconnectHandler OnDisconnect;
@@ -51,7 +53,7 @@ namespace KantanNetworking
         #endregion
 
 
-        #region Methods
+        #region Public Methods
 
         public void Start()
         {
@@ -73,30 +75,42 @@ namespace KantanNetworking
             await Handler.StopListeningAsync();
         }
 
-        public void Send(object message)
+        public void Send(object message) => Send("", message);
+        public void Send(string channel, object message)
         {
-            var tmpMsg = Encoding.GetBytes(JsonConvert.SerializeObject(message) + EndOfMessage);
+            var tmpMsg = PrepareMessage(channel, message);
 
-            foreach (var kvp in SocketMap)
+            foreach (var kvp in _socketMap)
                 kvp.Key.Send(tmpMsg);
         }
 
-        public void Send(string message)
-        {
-            var tmpMsg = Encoding.GetBytes(message + EndOfMessage);
+        public void Send(ISocket socket, object message) => Send(socket, "", message);
+        public void Send(ISocket socket, string channel, object message) => socket.Send(PrepareMessage(channel, message));
 
-            foreach (var kvp in SocketMap)
-                kvp.Key.Send(tmpMsg);
+        public ChannelSubscription Subscribe(string channel, Action<NetworkMessage> action)
+        {
+            var tmpSubscription = new ChannelSubscription()
+            {
+                Channel = channel,
+                Action = action
+            };
+            _subscriptions.Add(tmpSubscription);
+            return tmpSubscription;
         }
+        public void Unsubscribe(ChannelSubscription sub) => _subscriptions.Remove(sub);
 
-        public void Send(KantanSocket socket, object message)
-        {
-            socket.Send(message);
-        }
+        #endregion
 
-        public void Send(KantanSocket socket, string message)
+        #region Private Methods
+
+        private byte[] PrepareMessage(string channel, object message)
         {
-            socket.Send(message);
+            return Encoding.GetBytes(
+                JsonConvert.SerializeObject(new NetworkMessage()
+                {
+                    Channel = channel,
+                    Data = message
+                }) + EndOfMessage);
         }
 
         private void InitEventRedirecters()
@@ -114,18 +128,27 @@ namespace KantanNetworking
 
             if(tmpString.IndexOf(EndOfMessage) > -1)
             {
-                OnReceive?.Invoke(tmpString.Replace(EndOfMessage, ""));
-
+                HandleReceived(tmpString.Replace(EndOfMessage, ""));
                 ks.ClearBuffer();
             }
 
         }
 
+        private void HandleReceived(string receivedString)
+        {
+            var tmpMessage = JsonConvert.DeserializeObject<NetworkMessage>(receivedString);
+            OnReceive?.Invoke(tmpMessage);
+            foreach (var sub in _subscriptions.Where(sub => sub.Channel == tmpMessage.Channel))
+            {
+                sub.Action(tmpMessage);
+            }
+        }
+
         private void Handler_OnDisconnect(ISocket socket)
         {
-            var tempSocket = SocketMap[socket];
+            var tempSocket = _socketMap[socket];
             OnDisconnect?.Invoke(tempSocket);
-            SocketMap.Remove(socket);
+            _socketMap.Remove(socket);
         }
 
         private void Handler_OnConnection(ISocket socket)
@@ -137,7 +160,7 @@ namespace KantanNetworking
             };
 
             OnConnection?.Invoke(tempSocket);
-            SocketMap.Add(socket, tempSocket);
+            _socketMap.Add(socket, tempSocket);
         }
 
         #endregion

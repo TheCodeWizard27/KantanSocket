@@ -38,7 +38,7 @@ namespace Client
 
                 client.OnReceive += (message) =>
                 {
-                    Console.WriteLine($"Received : {message}");
+                    Console.WriteLine($"Received : {message.GetData<string>()}");
                 };
 
                 client.Connect();
@@ -55,7 +55,7 @@ namespace Client
                 Console.WriteLine(ex);
             }
 
-            Console.WriteLine("Disconnected Gracefully");
+            Console.WriteLine("Disconnected");
             Console.Read();
 
         }

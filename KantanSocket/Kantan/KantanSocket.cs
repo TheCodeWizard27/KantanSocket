@@ -40,6 +40,8 @@ namespace KantanNetworking
         }
 
         public string EndOfMessage { get; set; } = "<EOF>";
+        public string EndOfConnection { get; set; } = "<EOFC>";
+        private List<ChannelSubscription> _subscriptions { get; set; } = new List<ChannelSubscription>();
 
         #endregion
 
@@ -48,7 +50,7 @@ namespace KantanNetworking
 
         public delegate void OnConnectionHandler(KantanSocket socket);
         public delegate void OnDisconnectHandler(KantanSocket socket);
-        public delegate void OnReceiveHandler(string message);
+        public delegate void OnReceiveHandler(NetworkMessage message);
 
         public event OnConnectionHandler OnConnection;
         public event OnDisconnectHandler OnDisconnect;
@@ -71,6 +73,7 @@ namespace KantanNetworking
 
         public void Disconnect()
         {
+            Send(EndOfConnection);
             Handler.Disconnect();
         }
 
@@ -79,14 +82,28 @@ namespace KantanNetworking
             await Handler.DisconnectAsync();
         }
 
-        public void Send(object message)
+        public void Send(object message) => Send("", message);
+        public void Send(string channel, object message) => Handler.Send(PrepareMessage(channel, message));
+        public ChannelSubscription Subscribe(string channel, Action<NetworkMessage> action)
         {
-            Handler.Send(Encoding.GetBytes(JsonConvert.SerializeObject(message) + EndOfMessage));
+            var tmpSubscription = new ChannelSubscription()
+            {
+                Channel = channel,
+                Action = action
+            };
+            _subscriptions.Add(tmpSubscription);
+            return tmpSubscription;
         }
+        public void Unsubscribe(ChannelSubscription sub) => _subscriptions.Remove(sub);
 
-        public void Send(string message)
+        private byte[] PrepareMessage(string channel, object message)
         {
-            Handler.Send(Encoding.GetBytes(message + EndOfMessage));
+            return Encoding.GetBytes(
+                JsonConvert.SerializeObject(new NetworkMessage()
+                {
+                    Channel = channel,
+                    Data = message
+                }) + EndOfMessage);
         }
 
         private void InitEventRedirecters()
@@ -104,9 +121,22 @@ namespace KantanNetworking
 
             if (tmpString.IndexOf(EndOfMessage) > -1)
             {
-                OnReceive?.Invoke(tmpString.Replace(EndOfMessage, ""));
-
+                if (tmpString.IndexOf(EndOfConnection) != -1)
+                {
+                    Disconnect();
+                    return;
+                }
+                tmpString = tmpString.Replace(EndOfMessage, "");
+                HandleReceived(tmpString);
                 ks.ClearBuffer();
+            }
+        }
+        private void HandleReceived(string receivedString)
+        {
+            var tmpMessage = JsonConvert.DeserializeObject<NetworkMessage>(receivedString);
+            OnReceive?.Invoke(tmpMessage);
+            foreach(var sub in _subscriptions.Where(sub => sub.Channel == tmpMessage.Channel)) {
+                sub.Action(tmpMessage);
             }
         }
 
